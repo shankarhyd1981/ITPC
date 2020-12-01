@@ -51,34 +51,16 @@ with fileinput.FileInput(data.json, inplace=True, backup='.bak') as file:
 ****************************
 2. Write a docker compose file to deploy an application as a container using the following information: use nodesample as the image, set NODE_ENV=develop and LOG_LEVEL=info as environment variables for the container, mount /data from container for data backup, application should be accessible on machine at port 5555. Just assume you have working code and write the docker-compose file for the above. 
 
-FROM nodesample
-WORKDIR /code
-ENV FLASK_APP=app.py
-ENV FLASK_RUN_HOST=0.0.0.0
-RUN apk add --no-cache gcc musl-dev linux-headers
-COPY requirements.txt requirements.txt
-RUN pip install -r requirements.txt
-EXPOSE 5555
-COPY . .
-CMD ["flask", "run"]
+version: "3.8"
 
-
-docker-compose.yml(Below)
-
-
-version: "3"
 services:
-  consumer:
+
+  app-deploy:
     image: nodesample
-    networks:
-      - ITPC-producer
-    depends_on:
-      - producer
-  producer:
-    image: nodesample
+    environment:
+      NODE_ENV=develop
+      LOG_LEVEL=info
     ports:
-      - "5555:8080"
-    networks:
-      - consumer-producer 
-networks:
-  ITPC-producer:
+      - "5555"
+    volumes:
+      - .:/data

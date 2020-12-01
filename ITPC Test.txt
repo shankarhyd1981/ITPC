@@ -1,0 +1,84 @@
+Q11. Write a script to verify if the commits merged in last 24 hours contain changes to a particular directory in a repository or not, if yes, print deploying, if not, print skip deploying
+
+$ git log --since="24 hours Ago'
+
+commit(){
+    echo "Please enter a commit message..."
+    read msg
+    git add . --all
+    git commit -am $msg
+}
+
+check_commit(){
+    echo ========== CHECKING FOR CHANGES ========
+    changes=$(git diff)
+    if [ -n "$changes" ]; then
+        echo ""
+        echo "*** CHANGES FOUND ***"
+        echo "$changes"
+        echo ""
+        echo "You have uncomitted changes."
+        echo "Would you like to commit them (y/n)?"
+        read n
+        case $n in
+            "y") commit;;
+            "n") echo "Changes will not be included...";;
+            *) echo "invalid option";;
+        esac
+    else
+        echo "... No changes found"
+    fi
+}
+
+deploy(){
+    check_commit
+    echo ========== DEPLOYING TO ITPC========
+    git push ITPCmaster
+    run python manage.py syncdb
+}
+
+*************************
+Q2. Command to find first 30 occurences of words that start with letter "R" and replace with TEST in a file called data.json
+
+
+#!/usr/bin/env python3
+import fileinput
+
+with fileinput.FileInput(data.json, inplace=True, backup='.bak') as file:
+    for line in file:
+        print(line.replace(R, 'TEST'), end='')
+
+****************************
+2. Write a docker compose file to deploy an application as a container using the following information: use nodesample as the image, set NODE_ENV=develop and LOG_LEVEL=info as environment variables for the container, mount /data from container for data backup, application should be accessible on machine at port 5555. Just assume you have working code and write the docker-compose file for the above. 
+
+FROM nodesample
+WORKDIR /code
+ENV FLASK_APP=app.py
+ENV FLASK_RUN_HOST=0.0.0.0
+RUN apk add --no-cache gcc musl-dev linux-headers
+COPY requirements.txt requirements.txt
+RUN pip install -r requirements.txt
+EXPOSE 5555
+COPY . .
+CMD ["flask", "run"]
+
+
+docker-compose.yml(Below)
+
+
+version: "3"
+services:
+  consumer:
+    image: nodesample
+    networks:
+      - ITPC-producer
+    depends_on:
+      - producer
+  producer:
+    image: nodesample
+    ports:
+      - "5555:8080"
+    networks:
+      - consumer-producer 
+networks:
+  ITPC-producer:
